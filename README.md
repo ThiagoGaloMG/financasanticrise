@@ -1,14 +1,113 @@
-# financasanticrise
-<!DOCTYPE html>
-<html>
 <head>
-  <h1>Contador Regressivo</h1>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no">
+<title>index</title>
+<link href="/css/racetimer.css" rel="stylesheet" type="text/css">
+<script src="/js/createjs.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+<script src="/js/timerfix.js"></script>
+<script src="/js/prototypes.js"></script>
+<script src="/js/snippets.js"></script>
+<script src="/js/uptimer1.js"></script>
+<script src="js/main.js"></script>
+<script src="js/index.js"></script>
+<script>
+var canvas, stage, exportRoot, anim_container, dom_overlay_container, fnStartAnimation;
+var urlData=urlSettings();
+function init() 
+{
+	$("canvas").hide();
+	canvas = document.getElementById("canvas");
+	anim_container = document.getElementById("animation_container");
+	dom_overlay_container = document.getElementById("dom_overlay_container");
+	var comp=AdobeAn.getComposition("0BDF003865143E41B61E47B1C6F8B843");
+	var lib=comp.getLibrary();
+	var loader = new createjs.LoadQueue(false);
+	loader.installPlugin(createjs.Sound);
+	loader.addEventListener("complete", function(evt){handleComplete(evt,comp)});
+	loader.addEventListener("progress", function(evt){handleProgress(evt,comp)});
+	loader.addEventListener("error", function(evt){handleError(evt,comp)});
+	lib.properties.manifest.push(
+	{id:"language", src:"/language-files/"+urlData.language+".txt"});
+	if (urlData.ns) lib.properties.manifest.push(
+	{id:urlData.ns, src:"/sounds/"+urlData.ns+".mp3"}); 
+	loader.loadManifest(lib.properties.manifest);
+}
+function handleError(evt, comp)
+{
+	if (evt.data.type=="sound") urlData.ns=null;
+	if (evt.data.type=="text") urlData.language=null;
+}
+function handleProgress(evt, comp)
+{
+	$("#loader").html(Math.round(evt.progress*100)+"% loaded");
+}
+function handleComplete(evt,comp) {
+	//This function is always called, irrespective of the content. You can use the variable "stage" after it is created in token create_stage.
+	var lib=comp.getLibrary();
+	var ss=comp.getSpriteSheet();
+	var queue = evt.target;
+	var ssMetadata = lib.ssMetadata;
+	for(i=0; i<ssMetadata.length; i++) {
+		ss[ssMetadata[i].name] = new createjs.SpriteSheet( {"images": [queue.getResult(ssMetadata[i].name)], "frames": ssMetadata[i].frames} )
+	}
+	exportRoot = new lib.index();
+	stage = new lib.Stage(canvas);
+	stage.enableMouseOver();
+	createjs.Touch.enable(stage);
+	urlData.language=(urlData.language)?JSON.parse(queue.getResult("language")):null;
+	//Registers the "tick" event listener.
+	fnStartAnimation = function() {
+		stage.addChild(exportRoot);
+		createjs.Ticker.setFPS(lib.properties.fps);
+		createjs.Ticker.addEventListener("tick", stage);
+	}	    
+	//Code to support hidpi screens and responsive scaling.
+	function makeResponsive(isResp, respDim, isScale, scaleType) {		
+		var lastW, lastH, lastS=1;		
+		window.addEventListener('resize', resizeCanvas);		
+		resizeCanvas();		
+		function resizeCanvas() {			
+			var w = lib.properties.width, h = lib.properties.height;			
+			var iw = window.innerWidth, ih=window.innerHeight;			
+			var pRatio = window.devicePixelRatio || 1, xRatio=iw/w, yRatio=ih/h, sRatio=1;			
+			if(isResp) {                
+				if((respDim=='width'&&lastW==iw) || (respDim=='height'&&lastH==ih)) {                    
+					sRatio = lastS;                
+				}				
+				else if(!isScale) {					
+					if(iw<w || ih<h)						
+						sRatio = Math.min(xRatio, yRatio);				
+				}				
+				else if(scaleType==1) {					
+					sRatio = Math.min(xRatio, yRatio);				
+				}				
+				else if(scaleType==2) {					
+					sRatio = Math.max(xRatio, yRatio);				
+				}			
+			}			
+			canvas.width = w*pRatio*sRatio;			
+			canvas.height = h*pRatio*sRatio;
+			canvas.style.width = dom_overlay_container.style.width = anim_container.style.width =  w*sRatio+'px';				
+			canvas.style.height = anim_container.style.height = dom_overlay_container.style.height = h*sRatio+'px';
+			stage.scaleX = pRatio*sRatio;			
+			stage.scaleY = pRatio*sRatio;			
+			lastW = iw; lastH = ih; lastS = sRatio;            
+			stage.tickOnUpdate = false;            
+			stage.update();            
+			stage.tickOnUpdate = true;		
+		}
+	}
+	makeResponsive(true,'both',true,1);	
+	$("#loader").html("wait, initializing...");
+	setTimeout(function()
+	{
+		$("#loader").hide();
+		new Main(urlData);
+		$("canvas").show();
+	},200);
+	AdobeAn.compositionLoaded(lib.properties.id);
+	fnStartAnimation();
+}
+</script>
 </head>
-<body>
-  <div id="countdown"></div>
-  <script> src="https://www.online-stopwatch.com/countdown-timer/"
-  </script>
-  <script src="script.js"></script>
-</body>
-</html>
