@@ -2,12 +2,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Contador Regressivo</title>
+  <h1>Contador Regressivo</h1>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="countdown"></div>
-  <script src="https://cdn.jsdelivr.net/npm/countup.js@2.0.6/dist/countUp.umd.js"></script>
+  <script> src="https://www.online-stopwatch.com/countdown-timer/"
+  </script>
   <script src="script.js"></script>
 </body>
 </html>
